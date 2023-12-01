@@ -24,7 +24,7 @@ end
 
 function process_line_part_2(line::String)::Int32
   vec = Vector{Int32}()
-  for i in 1:length(line)
+  for i in eachindex(line)
     if line[i] ∈ "123456789"
       append!(vec, parse(Int32, line[i]))
     else
@@ -40,7 +40,7 @@ function process_line_part_2(line::String)::Int32
 end
 
 function part_1(input::Vector{String})::Int32
-  sum(map(process_line, input))
+  sum(map(process_line_part_1, input))
 end
 @info part_1(input)
 
