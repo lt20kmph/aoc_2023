@@ -1,4 +1,27 @@
 # https://adventofcode.com/2023/day/2
+using ArgParse
+
+function parse_commandline()
+  s = ArgParseSettings()
+
+  @add_arg_table s begin
+    "--test", "-t"
+    help = "run with test data"
+    action = :store_true
+  end
+
+  return parse_args(s)
+end
+
+function main()
+  parsed_args = parse_commandline()
+  println("Parsed args:")
+  for (arg, val) in parsed_args
+    println("  $arg  =>  $val")
+  end
+end
+
+main()
 
 input = readlines("2023/data/day_2.txt")
 
