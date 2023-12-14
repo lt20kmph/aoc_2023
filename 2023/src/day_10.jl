@@ -45,11 +45,9 @@ function find_loop(map::Vector{Vector{Char}})::Vector{LoopPos}
 
   find_loop!(map, loop_pos, loop_ends)
 
-  @info loop_ends
-
-  # while loop_ends[1] != loop_ends[2]
-  #   find_loop!(map, loop_pos, loop_ends)
-  # end
+  while loop_ends[1].x != loop_ends[2].x || loop_ends[1].y != loop_ends[2].y
+    find_loop!(map, loop_pos, loop_ends)
+  end
 
   loop_pos
 end
@@ -64,15 +62,18 @@ function find_loop!(map::Vector{Vector{Char}}, loop_pos::Vector{LoopPos}, loop_e
       if loop_end.x + δ_x > 0 && loop_end.x + δ_x <= max_x && loop_end.y + δ_y > 0 && loop_end.y + δ_y <= max_y
         if is_connected(δ_x, δ_y, map[loop_end.y+δ_y][loop_end.x+δ_x])
           ν = LoopPos(loop_end.dist + 1, loop_end.x + δ_x, loop_end.y + δ_y)
-          if !(ν in loop_pos)
-            loop_ends[i] = LoopPos(loop_end.dist + 1, loop_end.x + δ_x, loop_end.y + δ_y)
+          @info ν, i, "ν"
+          if !((ν.x, ν.y) in [(x.x, x.y) for x in loop_pos])
+            loop_ends[i] = ν
             push!(loop_pos, ν)
+            break
           end
         end
       end
     end
   end
-  @info loop_ends
+  @info loop_ends, "loop_ends"
+  @info loop_pos, "loop_pos"
 end
 
 

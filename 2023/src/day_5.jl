@@ -1,6 +1,6 @@
 # https://adventofcode.com/2023/day/5
 
-input = readlines("2023/data/day_5_test_1.txt")
+input = readlines("2023/data/day_5.txt")
 
 function parse_seeds(input::Vector{String})::Vector{Int}
   parts = split(input[1], ":")
@@ -49,22 +49,45 @@ function overlap(range_0::Tuple{Int,Int}, range_1::Tuple{Int,Int})::Union{Tuple{
   (max(range_0[1], range_1[1]), min(range_0[2], range_1[2]))
 end
 
-function apply_maps(maps::Vector{Map}, range::Tuple{Int,Int})::Vector{Tuple{Int,Int}}
+constant_maps = [
+  [Map(0, 0, 50)],
+  [Map(54, 54, 46)],
+  [Map(61, 61, 39)],
+  [Map(95, 95, 5), Map(0, 0, 18)],
+  [Map(0, 0, 45)],
+  [Map(70, 70, 30)],
+  [Map(97, 97, 3), Map(0, 0, 56)]]
+
+function apply_maps(maps::Vector{Map}, ranges::Vector{Tuple{Int,Int}})::Vector{Tuple{Int,Int}}
   new_ranges = Vector{Tuple{Int,Int}}()
   for map in maps
-    source_range = (map.sourceStart, map.sourceStart + map.width)
-    overlap_range = overlap(source_range, range)
-    if overlap_range !== nothing
-      push!(new_ranges, (map.destinationStart + overlap_range[1] - map.sourceStart, map.destinationStart + overlap_range[2] - map.sourceStart))
+    for range in ranges
+      source_range = (map.sourceStart, map.sourceStart + map.width)
+      @info source_range, "source_range"
+      @info range, "range"
+      overlap_range = overlap(source_range, range)
+      @info overlap_range, "overlap_range"
+      if overlap_range !== nothing && (overlap_range[1] <= overlap_range[2])
+        @info "pushing"
+        push!(
+          new_ranges,
+          (
+            map.destinationStart + overlap_range[1] - map.sourceStart,
+            map.destinationStart + overlap_range[2] - map.sourceStart
+          )
+        )
+        @info new_ranges, "new_ranges"
+      end
     end
   end
   new_ranges
 end
 
-function apply_all_maps(maps::Array{Vector{Map}}, range::Tuple{Int,Int})::Vector{Tuple{Int,Int}}
-  ranges = [range]
-  for map in maps
-    ranges = vcat(apply_maps(map, range)...)
+function apply_all_maps(maps::Array{Vector{Map}}, ranges::Vector{Tuple{Int,Int}})::Vector{Tuple{Int,Int}}
+  for (const_map, map) in zip(constant_maps, maps)
+    map = push!(map, const_map...)
+    ranges = apply_maps(map, ranges)
+    @info ranges, "ranges"
   end
   ranges
 end
@@ -92,17 +115,14 @@ end
 @info part_1(input)
 
 function part_2(input::Vector{String})::Int
+  @info input
   seeds = parse_seeds(input)
   maps = parse_input(input)
-  @info seeds
-  input_ranges = [(seeds[i], seeds[i] + seeds[i+1]) for i in 1:2:length(seeds)]
-  @info input_ranges
-  output_ranges = [apply_all_maps(maps, input_range) for input_range in input_ranges]
-  output_ranges = vcat(output_ranges...)
-  @info output_ranges
-  m_0 = minimum([output_range[1] for output_range in output_ranges if minimum([output_range[1], output_range[2]]) > 1])
-  m_1 = minimum([output_range[2] for output_range in output_ranges if minimum([output_range[1], output_range[2]]) > 1])
-  @info m_0, m_1
-  0
+  @info seeds, "seeds"
+  input_ranges = [(seeds[i], seeds[i] + seeds[i+1] - 1) for i in 1:2:length(seeds)]
+  @info input_ranges, "input_ranges"
+  output_ranges = apply_all_maps(maps, input_ranges)
+  @info output_ranges, "output_ranges"
+  minimum(vcat([min(r[1], r[2]) for r in output_ranges]))
 end
 @info part_2(input)
