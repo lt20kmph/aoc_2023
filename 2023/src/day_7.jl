@@ -255,6 +255,39 @@ function lt(a::Bid, b::Bid)::Bool
 
 end
 
+function get_rank_hand(hand::String)::Int
+  for (i, f) in enumerate([
+    is_five_of_a_kind,
+    is_four_of_a_kind,
+    is_full_house,
+    is_three_of_a_kind,
+    is_two_pairs,
+    is_one_pair,
+    is_high_card
+  ])
+    if f(hand)
+      return i
+    end
+  end
+end
+
+function get_max_rank_hand(hand::String)::Int
+  minimum(
+    [get_rank_hand(replace(hand, "J" => c)) for c in ranking_1]
+  )
+end
+
+function lt_3(a::Bid, b::Bid)::Bool
+  mr_a = get_max_rank_hand(a.hand)
+  mr_b = get_max_rank_hand(b.hand)
+  @info mr_a, a.hand 
+  @info mr_b, b.hand
+  if mr_a == mr_b
+    return compare_hands(a.hand, b.hand, ranking_2)
+  end
+  return mr_a > mr_b
+end
+
 function lt_2(a::Bid, b::Bid)::Bool
   rank_a, rank_b = 1, 1
   for (i, f) in enumerate([
@@ -308,11 +341,12 @@ function part_1(input::Vector{String})::Int
   bids = sort(bids, lt=lt)
   return sum(b.value * i for (i, b) in enumerate(bids))
 end
-@info part_1(input)
+@info part_1(input), "1"
 
 function part_2(input::Vector{String})::Int
   bids = parse_bid.(input)
-  bids = sort(bids, lt=lt_2)
+  bids = sort(bids, lt=lt_3)
+  @info bids
   return sum(b.value * i for (i, b) in enumerate(bids))
 end
-@info part_2(input)
+@info part_2(input), "2"
