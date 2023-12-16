@@ -1,7 +1,7 @@
 # https://adventofcode.com/2023/day/8
 using Base.Iterators
 
-input = readlines("2023/data/day_8_test_3.txt")
+input = readlines("2023/data/day_8.txt")
 
 
 struct Node
@@ -24,11 +24,13 @@ function parse_input(input::Vector{String})::Tuple{String,Dict{String,Node}}
   return (instructions, nodes)
 end
 
-function part_1(input::Vector{String})
-  :Int
-  instructions, nodes = parse_input(input)
+function get_time_to_stop(
+  instructions::String,
+  nodes::Dict{String,Node},
+  current_node::String,
+  stoping_condition::Function
+)::Int
   counter = 1
-  current_node = "AAA"
   for instruction in cycle(instructions)
 
     if instruction == 'L'
@@ -37,7 +39,7 @@ function part_1(input::Vector{String})
       current_node = nodes[current_node].right
     end
 
-    if current_node == "ZZZ"
+    if stoping_condition(current_node)
       return counter
     end
 
@@ -45,31 +47,23 @@ function part_1(input::Vector{String})
   end
 
 end
+
+function part_1(input::Vector{String})::Int
+  instructions, nodes = parse_input(input)
+  current_node = "AAA"
+  get_time_to_stop(instructions, nodes, current_node, (node) -> node == "ZZZ")
+end
+
 @info part_1(input)
 
-function check_at_end(current_nodes::Vector{String})
-  return all([node[end] == 'Z' for node in current_nodes])
-end
-
-function part_2(input)
+function part_2(input::Vector{String})::Int
   instructions, nodes = parse_input(input)
-  counter = 1
   current_nodes = [node for node in keys(nodes) if node[end] == 'A']
-  for instruction in cycle(instructions)
-
-    if instruction == 'L'
-      current_nodes = [nodes[node].left for node in current_nodes]
-    elseif instruction == 'R'
-      current_nodes = [nodes[node].right for node in current_nodes]
-    end
-
-    @info current_nodes
-
-    if check_at_end(current_nodes)
-      return counter
-    end
-
-    counter += 1
+  ms = []
+  for node in current_nodes
+    t = get_time_to_stop(instructions, nodes, node, node -> node[end] == 'Z')
+    push!(ms, t)
   end
+  lcm(ms...)
 end
 @info part_2(input)
